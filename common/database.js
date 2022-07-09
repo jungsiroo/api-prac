@@ -25,6 +25,44 @@ const getConnection = module.exports.getConnection = async () => {
     }
 }
 
+const showAllUser = module.exports.showAllUser = async () => {
+    console.log("Showing All Users");
+
+    let connection;
+    try {
+        connection = await getConnection();
+        const [result] = await connection.query(`SELECT * FROM USER`);
+        connection.release();
+
+        return result;
+    } catch (error) {
+        if (!!connection) {
+            connection.release();
+        }
+        throw error;
+    }
+}
+
+const showAllPost = module.exports.showAllPost = async () => {
+    console.log("Showing All Posts");
+
+    let connection;
+    try {
+        connection = await getConnection();
+        const [result] = await connection.query(`SELECT * FROM NOTICE`);
+        connection.release();
+
+        return result;
+    } catch (error) {
+        if (!!connection) {
+            connection.release();
+        }
+        throw error;
+    }
+}
+
+
+
 const execute = module.exports.execute = async params => {
     console.log("on DB execute: %j", params);
     const {psmt, binding} = params;
