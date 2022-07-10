@@ -15,7 +15,7 @@ pool.on("release", connection => {
     console.log(`connection ${connection.threadId} released`);
 })
 
-const getConnection = module.exports.getConnection = async () => {
+const getConnection = async () => {
     try {
         const connection = await pool.getConnection();
         console.log("connectionId: ", connection.threadId);
@@ -25,7 +25,7 @@ const getConnection = module.exports.getConnection = async () => {
     }
 }
 
-const showAllUser = module.exports.showAllUser = async () => {
+const showAllUsers = async () => {
     console.log("Showing All Users");
 
     let connection;
@@ -43,7 +43,7 @@ const showAllUser = module.exports.showAllUser = async () => {
     }
 }
 
-const showAllPost = module.exports.showAllPost = async () => {
+const showAllPosts = async () => {
     console.log("Showing All Posts");
 
     let connection;
@@ -62,15 +62,15 @@ const showAllPost = module.exports.showAllPost = async () => {
 }
 
 
-
-const execute = module.exports.execute = async params => {
+const execute = async params => {
     console.log("on DB execute: %j", params);
     const {psmt, binding} = params;
 
     let connection;
     try {
         connection = await getConnection();
-        const [result] = await connection.query(psmt, binding);
+        
+        result = await connection.query(psmt, binding);
 
         connection.release();
         return result;
@@ -80,4 +80,12 @@ const execute = module.exports.execute = async params => {
         }
         throw error;
     }
+}
+
+
+module.exports = {
+    getConnection,
+    showAllUsers,
+    showAllPosts,
+    execute
 }

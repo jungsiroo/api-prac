@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  div(id="input_page_wrapper")
+    div(id="input")
+      form(id="input_form", name="newNotice", method="post", action="/store")
+
+        div(class="label_box")
+          label(for="Title") Notice Title: 
+        input(type="text", name="title")
+          
+        div(class="label_box")
+          label(for="Content") Notice Content: 
+        input(type="text", name="content")
+
+        div(class="label_box")
+          label(for="User ID") User ID: 
+        input(type="number", name="userid")
+
+        br
+        br
+        button(id="submit", name="submit", type="submit") submit

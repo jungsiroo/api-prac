@@ -8,47 +8,76 @@ const dayjs = require('dayjs')
 
 router.get('/', async (req, res, next) => {
     try {
-        let post = await DB.showAllPost();
+        const [posts] = await DB.execute({
+            psmt: `select * from NOTICE`,
+            binding: []
+        });
 
-        if (!post) {
+        if (!posts) {
             return res.status(404).json({
                 ok: false,
-                message: "해당 공지를 찾을 수 없습니다.",
+                message: "공지를 찾을 수 없습니다.",
             });
         }
 
-        ret = new Array();
-
-        rt = {
-            ok : false,
-            notice_id : 0, 
-            user_id :  0,
-            title : '',
-            content : '',
-            updated_at : ''
-        }
-
-        for (let u in post) {
-            if (post[u].canceled_at)
-                continue;
-            rt.ok = true;
-            rt.notice_id = post[u].notice_id;
-            rt.user_id = post[u].user_id;
-            rt.title = post[u].title;
-            rt.content = post[u].content;
-            rt.updated_at = dayjs(post[u].updated_at).format("YY-MM-DD");
+        let ret = new Array();
+        
+        for (let u in posts) {
+            let rt = new Object();
+            
+            rt.title = posts[u].title;
+            rt.createdAt = dayjs(posts[u].created_at).format("YY-MM-DD");
 
             ret.push(rt);
         }
-
-        res.json(ret);
+        res.render('index', { title: JSON.stringify(ret, null, 4) });
+        res.json({"users" : ret});
     }
     
     catch (error) {
         console.log(error);
     }
 
-    res.send('respond with a resource');
+});
+
+router.get('/newNotice', async (req, res) => {
+    res.render('post');
+})
+
+router.get("/:noticeId", async (req, res) => {
+    const noticeId = req.params.noticeId;
+
+    try {
+        const [notice] = await DB.execute({
+            psmt: `select * from NOTICE where notice_id = ?`,
+            binding: [noticeId]
+        });
+
+        if (!notice) {
+            return res.status(404).json({
+                ok: false,
+                message: "해당 공지를 찾을 수 없습니다.",
+            });
+        }
+
+        console.log("notice: %j", notice[0]);
+        res.json({
+            title: notice[0].title,
+            content: notice[0].content,
+            createdAt: dayjs(notice[0].created_at).format("YY-MM-DD"),
+            user :{
+                "id" : notice[0].user_id,
+                "name" : notice[0].user_name,
+            }
+        })
+    } catch (e) {
+        console.error(e);
+
+        res.status(500).json({
+            ok: false,
+            message: "알 수 없는 오류가 발생했습니다."
+        });
+    }
 });
 
 
