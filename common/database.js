@@ -24,44 +24,6 @@ const getConnection = async () => {
         console.log('error on get connection', error);
     }
 }
-
-const showAllUsers = async () => {
-    console.log("Showing All Users");
-
-    let connection;
-    try {
-        connection = await getConnection();
-        const [result] = await connection.query(`SELECT * FROM USER`);
-        connection.release();
-
-        return result;
-    } catch (error) {
-        if (!!connection) {
-            connection.release();
-        }
-        throw error;
-    }
-}
-
-const showAllPosts = async () => {
-    console.log("Showing All Posts");
-
-    let connection;
-    try {
-        connection = await getConnection();
-        const [result] = await connection.query(`SELECT * FROM NOTICE`);
-        connection.release();
-
-        return result;
-    } catch (error) {
-        if (!!connection) {
-            connection.release();
-        }
-        throw error;
-    }
-}
-
-
 const execute = async params => {
     console.log("on DB execute: %j", params);
     const {psmt, binding} = params;
@@ -85,7 +47,5 @@ const execute = async params => {
 
 module.exports = {
     getConnection,
-    showAllUsers,
-    showAllPosts,
     execute
 }
