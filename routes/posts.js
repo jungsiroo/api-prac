@@ -1,77 +1,78 @@
-var express = require('express');
-var router = express.Router();
+let express = require('express');
+let router = express.Router();
 
 const DB = require("../common/database");
 
-//https://day.js.org/docs/en/parse/string-format
-const dayjs = require('dayjs')
-
 router.get('/', async (req, res, next) => {
     try {
-        const [posts] = await DB.execute({
-            psmt: `select * from NOTICE`,
-            binding: []
-        });
-
-        if (!posts) {
-            return res.status(404).json({
-                ok: false,
-                message: "공지를 찾을 수 없습니다.",
-            });
-        }
-
-        let ret = new Array();
-        
-        for (let u in posts) {
-            let rt = new Object();
-            
-            rt.title = posts[u].title;
-            rt.createdAt = dayjs(posts[u].created_at).format("YY-MM-DD");
-
-            ret.push(rt);
-        }
-        res.render('index', { title: JSON.stringify(ret, null, 4) });
-        res.json({"users" : ret});
-    }
-    
-    catch (error) {
+        let ret = await DB.getAllPostsList();
+        res.json({"posts" : ret});
+    } catch (error) {
         console.log(error);
     }
 
 });
 
-router.get('/newNotice', async (req, res) => {
-    res.render('post');
-})
-
-router.get("/:noticeId", async (req, res) => {
-    const noticeId = req.params.noticeId;
-
+router.post('/newPost', async (req, res) => {
     try {
-        const [notice] = await DB.execute({
-            psmt: `select * from NOTICE where notice_id = ?`,
-            binding: [noticeId]
+        const [data] = await DB.execute({
+            psmt: `select * from USER where user_id = ?`,
+            binding: [req.body['userid']]
         });
 
-        if (!notice) {
-            return res.status(404).json({
-                ok: false,
-                message: "해당 공지를 찾을 수 없습니다.",
+        console.log("user: %j", data);
+
+        if (!data || !data[0].type) {
+            return res.status(400).json({
+                success: false,
+                message: "권한이 없습니다. ",
             });
         }
 
-        console.log("notice: %j", notice[0]);
-        res.json({
-            title: notice[0].title,
-            content: notice[0].content,
-            createdAt: dayjs(notice[0].created_at).format("YY-MM-DD"),
-            user :{
-                "id" : notice[0].user_id,
-                "name" : notice[0].user_name,
-            }
-        })
+        await DB.execute({
+            psmt: `insert into POST (title, content, user_id, category, created_at, updated_at) VALUES(?, ?, ?, ?, NOW(), NOW())`,
+            binding: [req.body['title'], req.body['content'], req.body['userid'], req.body['category']]
+        });
+
+        res.redirect('/posts');
+    } catch(error){
+        console.log(error)
+    }
+})
+
+router.get("/:postId", async (req, res) => {
+    const postId = req.params.postId;
+
+    try {
+        let post = await DB.getPost(postId);
+        res.json(post);
     } catch (e) {
         console.error(e);
+
+        res.status(500).json({
+            ok: false,
+            message: "알 수 없는 오류가 발생했습니다."
+        });
+    }
+});
+
+router.post('/:postID/edit', async (req, res) => {
+    const postID = req.params.postID;
+
+    const columns = ["title", "content", "category"]
+    try {
+        const promises = columns.map(async (values, index) =>{
+            if (req.body[values]) {
+                await DB.execute({
+                    psmt : `update POST SET ${values}=?, updated_at = NOW() where post_id = ?`,
+                    binding : [req.body[values], postID]
+                });
+            }
+        })
+        await Promise.all(promises);
+        res.redirect(`/posts/${postID}`);
+    } catch(error) {
+        console.log(error);
 
         res.status(500).json({
             ok: false,
