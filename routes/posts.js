@@ -3,12 +3,17 @@ let router = express.Router();
 
 const DB = require("../common/database");
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
     try {
         let ret = await DB.getAllPostsList();
         res.json({"posts" : ret});
     } catch (error) {
         console.log(error);
+
+        res.status(500).json({
+            ok: false,
+            message: "알 수 없는 오류가 발생했습니다."
+        });
     }
 
 });
@@ -19,8 +24,6 @@ router.post('/newPost', async (req, res) => {
             psmt: `select * from USER where user_id = ?`,
             binding: [req.body['userid']]
         });
-
-        console.log("user: %j", data);
 
         if (!data || !data[0].type) {
             return res.status(400).json({
@@ -36,15 +39,20 @@ router.post('/newPost', async (req, res) => {
 
         res.redirect('/posts');
     } catch(error){
-        console.log(error)
+        console.log(error);
+
+        res.status(500).json({
+            ok: false,
+            message: "알 수 없는 오류가 발생했습니다."
+        });
     }
 })
 
-router.get("/:postId", async (req, res) => {
-    const postId = req.params.postId;
+router.get("/:postID", async (req, res) => {
+    const postID = req.params.postID;
 
     try {
-        let post = await DB.getPost(postId);
+        let post = await DB.getPost(postID);
         res.json(post);
     } catch (e) {
         console.error(e);

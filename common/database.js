@@ -16,6 +16,21 @@ pool.on("release", connection => {
 
 const dayjs = require('dayjs');
 
+const convertType = (type) => {
+    if (!type) {
+        return "비회원";
+    }
+
+    switch (type) {
+        case "admin":
+            return "관리자";
+        case "memeber":
+            return "회원";
+        default:
+            return "unknown";
+    }
+}
+
 const getConnection = async () => {
     try {
         const connection = await pool.getConnection();
@@ -75,22 +90,8 @@ const getAllUsers = async (forAdmin=false) => {
             rt.company = users[u].company;
             rt.github = users[u].github;
             rt.created_at = dayjs(users[u].created_at).format("YY-MM-DD");
-            rt.canceled_at = dayjs(users[u].canceled_at).format("YY-MM-DD");
-
-            //즉시실행함수
-            rt.type = ((type) => {
-                if (!type) {
-                    return "비회원";
-                }
-                switch (type) {
-                    case "admin":
-                        return "관리자";
-                    case "member":
-                        return "회원";
-                    default:
-                        return "비회원";
-                }
-            })(users[u].type);
+            rt.canceled_at = users[u].canceled_at ? dayjs(users[u].canceled_at).format("YY-MM-DD") : null;
+            rt.type = convertType(users[u].type)
             
             ret.push(rt);
         }
@@ -130,20 +131,7 @@ const getUser = async (userId, forAdmin=false) => {
         if (forAdmin)
             user_obj.canceled_at = user.canceled_at;
 
-        user_obj.type = ((type) => {
-            if (!type) {
-                return "비회원";
-            }
-            //즉시실행함수
-            switch (type) {
-                case "admin":
-                    return "관리자";
-                case "memeber":
-                    return "회원";
-                default:
-                    return "unknown";
-            }
-        })(user.type);
+        user_obj.type = convertType(user.type);
 
         return user_obj;
     } catch (e) {
@@ -181,7 +169,7 @@ const getAllPostsList = async (forAdmin=false) => {
             rt.id = posts[u].post_id;
             rt.createdAt = dayjs(posts[u].created_at).format("YY-MM-DD");
             rt.updatedAt = dayjs(posts[u].updated_at).format("YY-MM-DD");
-            rt.canceled_at = dayjs(posts[u].canceled_at).format("YY-MM-DD");
+            rt.canceled_at = posts[u].canceled_at ? dayjs(posts[u].canceled_at).format("YY-MM-DD") : null;
             rt.category = posts[u].category;
 
             ret.push(rt);
@@ -202,6 +190,9 @@ const getPost = async (postId) => {
             binding: [postId]
         });
 
+        let user = await getUser(post[0].user_id);
+        console.log("user : %j", user);
+
         if (!post) {
             return res.status(404).json({
                 ok: false,
@@ -216,7 +207,11 @@ const getPost = async (postId) => {
         post_obj.createdAt = dayjs(post[0].created_at).format("YY-MM-DD");
         post_obj.updatedAt = dayjs(post[0].updated_at).format("YY-MM-DD");
         post_obj.user = {
-            "id" : post[0].user_id
+            "id" : user.id,
+            "name" : user.name,
+            "username" : user.user_name,
+            "email" : user.email,
+            "type" : convertType(user.type),
         };
         post_obj.category = post[0].category;
 
@@ -269,5 +264,6 @@ module.exports = {
     getAllUsers,
     getPost,
     getPostsByUserID,
+    convertType,
     getAllPostsList,
 }

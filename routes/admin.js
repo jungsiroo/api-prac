@@ -3,7 +3,7 @@ let router = express.Router();
 
 const DB = require("../common/database");
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
     try {
         let users = await DB.getAllUsers(forAdmin=true);
         let posts = await DB.getAllPostsList(forAdmin=true);
@@ -12,6 +12,11 @@ router.get('/', async (req, res, next) => {
     
     catch (error) {
         console.log(error);
+
+        res.status(500).json({
+            ok: false,
+            message: "알 수 없는 오류가 발생했습니다."
+        });
     }
 });
 
@@ -27,6 +32,11 @@ router.post('/newUser', async (req, res) => {
         res.redirect('/admin');
     } catch(error){
         console.log(error)
+
+        res.status(500).json({
+            ok: false,
+            message: "알 수 없는 오류가 발생했습니다."
+        });
     }
 })
 
@@ -36,7 +46,7 @@ router.post('/users/:userID/edit', async (req, res) => {
 
     try {
         await DB.execute({
-            psmt : `update USER SET canceled_at=? where user_id = ?`,
+            psmt : `update USER SET canceled_at = ? where user_id = ?`,
             binding : [req.body.canceled_at, userID]
         });
         res.redirect(`/admin/users/${userID}`);
@@ -50,12 +60,12 @@ router.post('/users/:userID/edit', async (req, res) => {
     }
 });
 
-router.get("/users/:userId", async (req, res) => {
-    const userId = req.params.userId;
+router.get("/users/:userID", async (req, res) => {
+    const userID = req.params.userID;
 
     try {
-        let user = await DB.getUser(userId, forAdmin=true);
-        let posts = await DB.getPostsByUserID(userId);
+        let user = await DB.getUser(userID, forAdmin=true);
+        let posts = await DB.getPostsByUserID(userID);
         res.json({"info":user, "posts":posts});
         
     } catch (e) {

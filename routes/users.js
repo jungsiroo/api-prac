@@ -5,7 +5,7 @@ const DB = require("../common/database");
 
 //https://day.js.org/docs/en/parse/string-format
 /* GET users listing. */
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
     try {
         let ret = await DB.getAllUsers(forAdmin=false);
         res.json({"users" : ret});
@@ -41,11 +41,11 @@ router.post('/:userID/edit', async (req, res) => {
     }
 });
 
-router.get("/:userId", async (req, res) => {
-    const userId = req.params.userId;
+router.get("/:userID", async (req, res) => {
+    const userID = req.params.userID;
 
     try {
-        let user = await DB.getUser(userId);
+        let user = await DB.getUser(userID);
         res.json(user);
         
     } catch (e) {
