@@ -27,7 +27,6 @@ const getReturnObject = (message, status, data) => {
 const isEmpty = (value) => {
     if (value === null) return true
     if (typeof value === 'undefined') return true
-    if (typeof value === 'string' && value === '') return true
     if (Array.isArray(value) && value.length < 1) return true
     if (typeof value === 'object' && value.constructor.name === 'Object' && Object.keys(value).length < 1 && Object.getOwnPropertyNames(value) < 1) return true
     if (typeof value === 'object' && value.constructor.name === 'String' && Object.keys(value).length < 1) return true 
@@ -66,43 +65,7 @@ const execute = async params => {
 }
 
 
-const getPost = async (postId) => {
-    try {
-        const [post] = await execute({
-            psmt: `select * from POST where post_id = ?`,
-            binding: [postId]
-        });
 
-        let user = await getUser(post[0].user_id);
-        console.log("user : %j", user);
-
-        if (!post) {
-            return res.status(404).json({
-                ok: false,
-                message: "해당 게시글을 찾을 수 없습니다.",
-            });
-        }
-
-        let post_obj = new Object();
-
-        post_obj.title = post[0].title;
-        post_obj.content = post[0].content;
-        post_obj.createdAt = dayjs(post[0].created_at).format("YY-MM-DD");
-        post_obj.updatedAt = dayjs(post[0].updated_at).format("YY-MM-DD");
-        post_obj.user = {
-            "id" : user.id,
-            "name" : user.name,
-            "username" : user.user_name,
-            "email" : user.email,
-            "type" : convertType(user.type),
-        };
-        post_obj.category = post[0].category;
-
-        return post_obj;
-    } catch(error) {
-        return error;
-    }
-}
 
 const getPostsByUserID = async (userID) => {
     try {

@@ -5,7 +5,7 @@ const DB = require("../common/database");
 
 router.get('/', async (req, res) => {
     try {
-        let ret = await DB.getAllPostsList();
+        let ret = await DB.getAllPosts();
         res.json({"posts" : ret});
     } catch (error) {
         console.log(error);
