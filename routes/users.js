@@ -1,58 +1,54 @@
 let express = require('express');
 let router = express.Router();
 
-const DB = require("../common/database");
-const UserRepo = require("../users/repository");
+const Util = require("../common/util");
+const UserRepo = require("../repository/user");
 
 router.get('/', async (req, res) => {
     try {
-        let ret = await UserRepo.getAllUsers(forAdmin=false);
-        
+        let ret = await UserRepo.getAllUsers({forAdmin:false});
         res.status(ret.status).json(ret);
     }
     
     catch (error) {
         res.status(500).json(
-            DB.getReturnObject(error, 500, null)
+            Util.getReturnObject(error, 500, {})
         )
     }
 });
 
-router.get("/:userID", async (req, res) => {
-    const userID = req.params.userID;
+router.get("/:userId", async (req, res) => {
+    const userId = req.params.userId;
 
     try {
-        let user = await UserRepo.getUser(userID);
+        let user = await UserRepo.getUser({userId:userId, forAdmin:false});
         res.status(user.status).json(user);
         
     } catch (e) {
         console.log(e);
         res.status(500).json(
-            DB.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, null)
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
         )
     }
 });
 
-router.put('/:userID/edit', async (req, res) => {
-    const userID = req.params.userID;
+router.patch('/:userId', async (req, res) => {
+    const userId = req.params.userId;
 
-    const columns = ["password", "username", "name", "email", "company", "github"]
     try {
-        const promises = columns.map(async (values) =>{
-            if (req.body[values]) {
-                UserRepo.editUser(userID, values, req.body[values]);
-            }
+        let result = await UserRepo.editUser({
+            userId : userId,
+            data : req.body
         })
-        await Promise.all(promises);
-        res.redirect(`/users/${userID}`);
+
+        res.status(result.status).json(result);
     } catch(error) {
         console.log(error);
         res.status(500).json(
-            DB.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, null)
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
         )
     }
 });
-
 
 
 module.exports = router;

@@ -1,81 +1,103 @@
-let express = require("express");
+let express = require('express');
 let router = express.Router();
 
-const DB = require("../common/database");
+const Util = require("../common/util");
+const AdminRepo = require("../repository/admin");
+const UserRepo = require("../repository/user");
+const PostRepo = require("../repository/post");
 
-router.get('/', async (req, res) => {
+router.get('/users', async (req, res) => {
     try {
-        let users = await DB.getAllUsers(forAdmin=true);
-        let posts = await DB.getAllPostsList(forAdmin=true);
-        res.json({"users" : users, "posts":posts});
+        let ret = await UserRepo.getAllUsers({forAdmin:true});
+        res.status(ret.status).json(ret);
     }
     
     catch (error) {
         console.log(error);
 
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject(error, 500, {})
+        )
     }
 });
 
-router.post('/newUser', async (req, res) => {
+router.post('/users', async (req, res) => {
     try {
-        await DB.execute({
-            psmt: `insert into USER (username, password, email, student_id, name, type, generation, company, github, created_at, updated_at) \
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-            binding: [req.body['username'], req.body['password'], req.body['email'], req.body['student_id'], req.body['name'], req.body['type'],
-                      req.body['generation'],req.body['company'], req.body['github']]
-        });
-
-        res.redirect('/admin');
-    } catch(error){
-        console.log(error)
-
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+        let ret = await AdminRepo.newUser({data : req.body});
+        res.status(ret.status).json(ret);
+    }
+    
+    catch (error) {
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject(error, 500, {})
+        )
     }
 })
 
-
-router.post('/users/:userID/edit', async (req, res) => {
-    const userID = req.params.userID;
-
-    try {
-        await DB.execute({
-            psmt : `update USER SET canceled_at = ? where user_id = ?`,
-            binding : [req.body.canceled_at, userID]
-        });
-        res.redirect(`/admin/users/${userID}`);
-    } catch(error) {
-        console.log(error);
-
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
-    }
-});
-
-router.get("/users/:userID", async (req, res) => {
-    const userID = req.params.userID;
+router.get("users/:userId", async (req, res) => {
+    const userId = req.params.userId;
 
     try {
-        let user = await DB.getUser(userID, forAdmin=true);
-        let posts = await DB.getPostsByUserID(userID);
-        res.json({"info":user, "posts":posts});
+        let user = await UserRepo.getUser({userId:userId, forAdmin:true});
+        res.status(user.status).json(user);
         
     } catch (e) {
-        console.error(e);
+        console.log(e);
+        res.status(500).json(
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+        )
+    }
+})
 
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+router.patch('/users/:userId/kick', async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        let result = await AdminRepo.kickUser({
+            userId : userId
+        })
+
+        res.status(result.status).json(result);
+    } catch(error) {
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+        )
+    }
+})
+
+router.get('/posts', async (req, res) => {
+    try {
+        let ret = await PostRepo.getAllPosts({forAdmin:true});
+        res.status(ret.status).json(ret);
+    }
+    
+    catch (error) {
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject(error, 500, {})
+        )
     }
 });
+
+router.get('/posts/:userId', async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        let ret = await AdminRepo.getPostsByUserID({userId:userId});
+        res.status(ret.status).json(ret);
+    }
+    
+    catch (error) {
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject(error, 500, {})
+        )
+    }
+});
+
+
 
 module.exports = router;

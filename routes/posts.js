@@ -1,91 +1,82 @@
 let express = require('express');
 let router = express.Router();
 
-const DB = require("../common/database");
+const Util = require("../common/util");
+const PostRepo = require("../repository/post");
 
 router.get('/', async (req, res) => {
     try {
-        let ret = await DB.getAllPosts();
-        res.json({"posts" : ret});
-    } catch (error) {
-        console.log(error);
-
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+        let ret = await PostRepo.getAllPosts({forAdmin:false});
+        res.status(ret.status).json(ret);
     }
-
+    
+    catch (error) {
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject(error, 500, {})
+        )
+    }
 });
 
-router.post('/newPost', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const [data] = await DB.execute({
-            psmt: `select * from USER where user_id = ?`,
-            binding: [req.body['userid']]
-        });
-
-        if (!data || !data[0].type) {
-            return res.status(400).json({
-                success: false,
-                message: "권한이 없습니다. ",
-            });
-        }
-
-        await DB.execute({
-            psmt: `insert into POST (title, content, user_id, category, created_at, updated_at) VALUES(?, ?, ?, ?, NOW(), NOW())`,
-            binding: [req.body['title'], req.body['content'], req.body['userid'], req.body['category']]
-        });
-
-        res.redirect('/posts');
+        let ret = await PostRepo.newPost({data : req.body})
+        res.status(ret.status).json(ret);
     } catch(error){
         console.log(error);
-
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+        res.status(500).json(
+            Util.getReturnObject(error, 500, {})
+        )
     }
 })
 
-router.get("/:postID", async (req, res) => {
-    const postID = req.params.postID;
+router.get("/:postId", async (req, res) => {
+    const postId = req.params.postId;
 
     try {
-        let post = await DB.getPost(postID);
-        res.json(post);
+        let user = await PostRepo.getPost({postId:postId, forAdmin:false});
+        res.status(user.status).json(user);
+        
     } catch (e) {
-        console.error(e);
-
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+        console.log(e);
+        res.status(500).json(
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+        )
     }
 });
 
-router.post('/:postID/edit', async (req, res) => {
-    const postID = req.params.postID;
+router.patch('/:postId', async (req, res) => {
+    const postId = req.params.postId;
 
-    const columns = ["title", "content", "category"]
     try {
-        const promises = columns.map(async (values, index) =>{
-            if (req.body[values]) {
-                await DB.execute({
-                    psmt : `update POST SET ${values}=?, updated_at = NOW() where post_id = ?`,
-                    binding : [req.body[values], postID]
-                });
-            }
+        let result = await PostRepo.editPost({
+            postId : postId,
+            data : req.body
         })
-        await Promise.all(promises);
-        res.redirect(`/posts/${postID}`);
+
+        res.status(result.status).json(result);
     } catch(error) {
         console.log(error);
+        res.status(500).json(
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+        )
+    }
+});
 
-        res.status(500).json({
-            ok: false,
-            message: "알 수 없는 오류가 발생했습니다."
-        });
+router.patch('/:postId/delete', async (req, res) => {
+    const postId = req.params.postId;
+
+    try {
+        let result = await PostRepo.deletePost({
+            postId : postId
+        })
+
+        res.status(result.status).json(result);
+    } catch(error) {
+        console.log(error);
+        res.status(500).json(
+            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+        )
     }
 });
 
