@@ -4,8 +4,13 @@ const MSG = require("../common/message");
 const dayjs = require('dayjs');
 
 const getAllUsers = async options => {
-    const {forAdmin} = options;
-    const sql = forAdmin ? `select * from USER;` : `select * from USER where canceled_at IS NULL;`
+    const {forAdmin, sortOption} = options;
+    let sql = forAdmin ? `select * from USER` : `select * from USER where canceled_at IS NULL`
+    
+    if (sortOption == "studentId") 
+        sql += ` order by student_id;`;
+    else if (sortOption == "generation")
+        sql += ` order by generation DESC;`;
 
     try {
         const [users] = await DB.execute({

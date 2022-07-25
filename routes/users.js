@@ -6,11 +6,12 @@ const UserRepo = require("../repository/user");
 
 router.get('/', async (req, res) => {
     try {
-        let ret = await UserRepo.getAllUsers({forAdmin:false});
+        let ret = await UserRepo.getAllUsers({forAdmin:false, sortOption : req.query.sort});
         res.status(ret.status).json(ret);
     }
     
     catch (error) {
+        console.log(error);
         res.status(500).json(
             Util.getReturnObject(error, 500, {})
         )
