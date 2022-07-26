@@ -25,10 +25,10 @@ router.get("/:userId", async (req, res) => {
         let user = await UserRepo.getUser({userId:userId, forAdmin:false});
         res.status(user.status).json(user);
         
-    } catch (e) {
+    } catch (error) {
         console.log(e);
         res.status(500).json(
-            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+            Util.getReturnObject(error, 500, {})
         )
     }
 });
@@ -46,7 +46,7 @@ router.patch('/:userId', async (req, res) => {
     } catch(error) {
         console.log(error);
         res.status(500).json(
-            Util.getReturnObject("알 수 없는 오류가 발생했습니다.", 500, {})
+            Util.getReturnObject(error, 500, {})
         )
     }
 });

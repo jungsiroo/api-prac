@@ -18,7 +18,7 @@ const newUser = async options => {
             data['company'] || null , data['github'] || null]
         });
 
-        return Util.getReturnObject(MSG.POST_ADDED, 201, {})
+        return Util.getReturnObject(MSG.USER_ADDED, 201, {})
     } catch (error) {
         console.log(error);
         return Util.getReturnObject(MSG.UNKNOWN_ERROR, 500, {})
