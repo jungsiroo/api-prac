@@ -121,7 +121,7 @@ const editPost = async options => {
     const bindings = [];
 
     Object.entries(data).forEach(([key, value]) => {
-        sql += ` ${key}=?,`;
+        sql += ` ${Util.converToDBKey(key)}=?,`;
         bindings.push(value);
     });
     

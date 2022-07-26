@@ -29,8 +29,22 @@ const convertType = (type) => {
     }
 }
 
+const converToDBKey = (key) => {
+    switch (type) {
+        case "userId" : return "user_id";
+        case "postId" : return "post_id";
+        case "userName" : return "username";
+        case "studentId" : return "student_id";
+        case "createdAt" : return "created_at";
+        case "updatedAt" : return "updated_at";
+        case "canceledAt" : return "canceled_at";
+        default : return key;
+    }
+}
+
 module.exports = {
     getReturnObject,
     isEmpty,
-    convertType
+    convertType,
+    converToDBKey
 }
