@@ -24,13 +24,13 @@ const convertType = (type) => {
 
     switch (type) {
         case "admin": return "관리자";
-        case "memeber": return "회원";
+        case "member": return "회원";
         default: return "unknown";
     }
 }
 
-const converToDBKey = (key) => {
-    switch (type) {
+const convertToDBKey = (key) => {
+    switch (key) {
         case "userId" : return "user_id";
         case "postId" : return "post_id";
         case "userName" : return "username";
@@ -46,5 +46,5 @@ module.exports = {
     getReturnObject,
     isEmpty,
     convertType,
-    converToDBKey
+    convertToDBKey
 }

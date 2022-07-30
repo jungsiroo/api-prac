@@ -92,7 +92,7 @@ const editUser = async options => {
     const bindings = [];
 
     Object.entries(data).forEach(([key, value]) => {
-        sql += ` ${Util.converToDBKey(key)}=?,`;
+        sql += ` ${Util.convertToDBKey(key)}=?,`;
         bindings.push(value);
     });
     
